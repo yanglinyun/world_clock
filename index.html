@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>世界时钟</title>
+<style>
+	body {
+		padding: 0;
+		margin: 0;
+		background-color: #03A9F4;
+		text-align:center;
+	}
+
+	canvas {
+		display: block;
+		margin: 20px auto;
+		background-color: white;
+		border-radius: 50%;
+		border: 10px solid #000;
+	}
+	@media screen and (min-width:540px){
+		canvas {
+		display: inline-block;
+		margin: 20px auto;
+	}
+	}
+</style>
+</head>
+<body>
+<canvas id="Beijing" width="300" height="300" data-city="北京"></canvas>
+<canvas id="Tokyo" width="300" height="300" data-city="北京"></canvas>
+<canvas id="Los Angeles" width="300" height="300" data-city="北京"></canvas>
+<script>
+
+createClock(getEle("Beijing"));
+createClock(getEle("Tokyo"));
+createClock(getEle("Los Angeles"));
+
+function getEle(idName){
+	return document.getElementById(idName);
+}
+function createClock(obj){
+    let canvas = obj;
+    let city = obj.getAttribute("id");
+    let ctx = canvas.getContext("2d");
+    draw(ctx,city);
+}
+
+function draw(ctx,city){
+    requestAnimationFrame(function step(){
+        drawDial(ctx,city); //绘制表盘
+        drawAllHands(ctx,city); //绘制时分秒针
+        drawCore(ctx);//绘制表芯
+        requestAnimationFrame(step);
+    });
+}
+function drawCore(ctx){
+	let pi = Math.PI;
+	ctx.save();
+    ctx.translate(150, 150); //把坐标轴的远点平移到原来的中心
+    ctx.beginPath();
+    ctx.fillStyle = "#fff";
+    ctx.arc(0, 0, 5, 0, 2 * pi); //绘制圆周
+    ctx.fill();
+    ctx.closePath();
+    ctx.restore();
+}
+var cityTimeZone = [
+{city:"Beijing",direction:"e",zoneNum:8},
+{city:"Tokyo",direction:"e",zoneNum:9},
+{city:"Los Angeles",direction:"w",zoneNum:8},
+
+];
+function getCityZone(city){
+		for(var i=0; i<cityTimeZone.length;i++){
+			var cur = cityTimeZone[i];
+			if(cur.city==city){
+				return {direction:cur.direction,zoneNum:cur.zoneNum};
+			}
+		}
+}
+/*绘制时分秒针*/
+function drawAllHands(ctx,city){
+	let zoneInfo = getCityZone(city);
+	let direction = zoneInfo.direction;
+	let zoneNum = zoneInfo.zoneNum;
+    let time = getTimeZone(direction,zoneNum);
+    let s = time.getSeconds();
+    let m = time.getMinutes();
+    let h = time.getHours();
+    var day = time.getDate()<10?"0"+time.getDate():time.getDate();
+	var month = time.getMonth()+1<10?"0"+(time.getMonth()+1):time.getMonth()+1;
+	var year = time.getFullYear();
+	var weekList = ["Sun","Mon","Tues","Wed","Thur","Fri","Sat"];
+	var week = weekList[time.getDay()];
+
+
+
+    let pi = Math.PI;
+    let secondAngle = pi / 180 * 6 * s;  //计算出来s针的弧度
+    let minuteAngle = pi / 180 * 6 * m + secondAngle / 60;  //计算出来分针的弧度
+    let hourAngle = pi / 180 * 30 * h + minuteAngle / 12;  //计算出来时针的弧度
+
+    drawHand(hourAngle, 60, 6, "black", ctx);  //绘制时针
+    drawHand(minuteAngle, 106, 4, "black", ctx);  //绘制分针
+    drawHand(secondAngle, 120, 2, "black", ctx);  //绘制秒针
+    digitalColor(year,month,week,day,ctx);
+}
+function getTimeZone(direction,zoneNum){
+	var cur = new Date();
+	var curZoneTime = cur.getTime();
+	var curZoneOffset = cur.getTimezoneOffset()*60000;
+	var utc0 = curZoneTime + curZoneOffset;
+	if(direction=="w"){
+		utc0-=zoneNum*3600000;
+	}else if(direction=="e"){
+		utc0+=zoneNum*3600000;
+	}
+	return new Date(utc0);
+}
+function digitalColor(year,month,week,day,ctx){
+	ctx.save();
+	ctx.translate(150, 150); //一定坐标原点到原来的中心
+	ctx.beginPath();
+    ctx.font = "14px sans-serif"
+    ctx.textAlign="center";
+    ctx.fontWeight="bold";
+    ctx.fillText(`${year}-${month}-${day} ${week}`, 0, 80);
+ 	ctx.closePath();
+ 	ctx.restore();
+}
+/*绘制时针、或分针、或秒针
+ * 参数1：要绘制的针的角度
+ * 参数2：要绘制的针的长度
+ * 参数3：要绘制的针的宽度
+ * 参数4：要绘制的针的颜色
+ * 参数4：ctx
+ * */
+function drawHand(angle, len, width, color, ctx){
+    ctx.save();
+    ctx.translate(150, 150); //把坐标轴的远点平移到原来的中心
+    ctx.rotate(-Math.PI / 2 + angle);  //旋转坐标轴。 x轴就是针的角度
+    ctx.beginPath();
+    ctx.moveTo(-4, 0);
+    ctx.lineTo(len, 0);  // 沿着x轴绘制针
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+}
+
+/*绘制表盘*/
+function drawDial(ctx,city){
+    let pi = Math.PI;
+
+    ctx.clearRect(0, 0, 300, 300); //清除所有内容
+    ctx.save();
+
+    ctx.translate(150, 150); //一定坐标原点到原来的中心
+    //表芯
+    ctx.beginPath();
+    ctx.fillStyle = "#000";
+    ctx.arc(0, 0, 10, 0, 2 * pi); //绘制圆周
+    ctx.fill();
+    ctx.closePath();
+
+    //表边框
+    ctx.beginPath();
+    ctx.fillStyle = "#000";
+    ctx.lineWidth = 10;
+    ctx.arc(0, 0, 140, 0, 2 * pi); //绘制圆周
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.font = "20px sans-serif"
+    ctx.textAlign="center";
+    ctx.fontWeight="bold";
+    ctx.fillText(city, 0, 100);
+ 	ctx.closePath();	
+
+
+
+    for (let i = 0; i < 60; i++){//绘制刻度。
+        ctx.save();
+        ctx.rotate(-pi / 2 + i * pi / 30);  //旋转坐标轴。坐标轴x的正方形从 向上开始算起
+        ctx.beginPath();
+        ctx.fillStyle = "#000";
+        var r = i%5==0?3:1;
+	    ctx.arc(0, 126, r, 0, 2 * pi); //绘制刻度
+	    ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+    }
+    ctx.restore();
+}
+</script>
+</body>
+</html>

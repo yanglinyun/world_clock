@@ -153,6 +153,18 @@ function drawHand(angle, len, width, color, ctx){
 }
 
 /*绘制表盘*/
+var roma = ["","I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "X",
+    "XI",
+    "XII"]
 function drawDial(ctx,city){
     let pi = Math.PI;
 
@@ -190,8 +202,16 @@ function drawDial(ctx,city){
         ctx.beginPath();
         ctx.fillStyle = "#000";
         var r = i%5==0?3:1;
-	    ctx.arc(0, 126, r, 0, 2 * pi); //绘制刻度
-	    ctx.fill();
+	ctx.arc(0, 126, r, 0, 2 * pi); //绘制刻度
+	if(r==3){
+            ctx.font = "10px sans-serif";
+            ctx.fontWeight = "bold";
+            ctx.textAlign="center";
+            ctx.rotate(-0.5 * pi);
+            ctx.fillText(i/5%12==0?roma[12]:roma[i/5], 0, 120);
+           
+        }
+	ctx.fill();
         ctx.closePath();
         ctx.restore();
     }

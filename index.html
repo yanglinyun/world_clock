@@ -106,6 +106,23 @@ function drawAllHands(ctx,city){
     drawHand(minuteAngle, 106, 4, "black", ctx);  //绘制分针
     drawHand(secondAngle, 120, 2, "black", ctx);  //绘制秒针
     digitalColor(year,month,week,day,ctx);
+    setAmPm(h,ctx);
+}
+function setAmPm(hour,ctx){
+    //AM/PM
+    ctx.save();
+    ctx.translate(150, 150); //一定坐标原点到原来的中心
+    ctx.beginPath();
+    ctx.font = "10px sans-serif"
+    ctx.textAlign="center";
+    ctx.fontWeight="bold";
+    var scale = "PM";
+    if(hour >=0 && hour<12){
+        scale = "AM";
+    }
+    ctx.fillText(scale, 0, 40);
+     ctx.closePath();
+     ctx.restore();
 }
 function getTimeZone(direction,zoneNum){
 	var cur = new Date();
@@ -186,7 +203,8 @@ function drawDial(ctx,city){
     ctx.arc(0, 0, 140, 0, 2 * pi); //绘制圆周
     ctx.stroke();
     ctx.closePath();
-
+    	
+    //城市
     ctx.beginPath();
     ctx.font = "20px sans-serif"
     ctx.textAlign="center";
